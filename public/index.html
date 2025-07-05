@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Extractor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        input[type="datetime-local"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .download-btn {
+            background-color: #28a745;
+        }
+
+        .download-btn:hover {
+            background-color: #218838;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .event-form {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎯 Event Extractor</h1>
+
+        <form id="extractForm">
+            <div class="form-group">
+                <label for="url">Event Page URL:</label>
+                <input type="url" id="url" name="url" required placeholder="https://example.com/event">
+            </div>
+
+            <div class="form-group">
+                <label for="openaiToken">OpenAI API Token:</label>
+                <input type="text" id="openaiToken" name="openaiToken" required placeholder="sk-...">
+            </div>
+
+            <button type="submit">Extract Event Details</button>
+        </form>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Extracting event details...</p>
+        </div>
+
+        <div id="error" class="error"></div>
+        <div id="success" class="success"></div>
+
+        <div id="eventForm" class="event-form">
+            <h3>Event Details</h3>
+            <form id="eventDetailsForm">
+                <div class="form-group">
+                    <label for="title">Event Title:</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="startDate">Start Date & Time:</label>
+                    <input type="datetime-local" id="startDate" name="startDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="endDate">End Date & Time:</label>
+                    <input type="datetime-local" id="endDate" name="endDate">
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <input type="text" id="location" name="location">
+                </div>
+
+                <div class="form-group">
+                    <label for="eventUrl">Event URL:</label>
+                    <input type="url" id="eventUrl" name="eventUrl">
+                </div>
+
+                <button type="submit" class="download-btn">Generate & Download ICS File</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Load default OpenAI token from server
+        fetch('/config')
+            .then(response => response.json())
+            .then(config => {
+                if (config.defaultOpenAIToken) {
+                    document.getElementById('openaiToken').value = config.defaultOpenAIToken;
+                }
+            })
+            .catch(error => {
+                console.log('No default token configured');
+            });
+
+        const extractForm = document.getElementById('extractForm');
+        const eventForm = document.getElementById('eventForm');
+        const eventDetailsForm = document.getElementById('eventDetailsForm');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const success = document.getElementById('success');
+
+        function showError(message) {
+            error.textContent = message;
+            error.style.display = 'block';
+            success.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            success.textContent = message;
+            success.style.display = 'block';
+            error.style.display = 'none';
+        }
+
+        function hideMessages() {
+            error.style.display = 'none';
+            success.style.display = 'none';
+        }
+
+        extractForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessages();
+
+            const formData = new FormData(extractForm);
+            const url = formData.get('url');
+            const openaiToken = formData.get('openaiToken');
+
+            loading.style.display = 'block';
+            eventForm.style.display = 'none';
+
+            try {
+                const response = await fetch('/extract', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url, openaiToken })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to extract event details');
+                }
+
+                // Populate form with extracted data
+                document.getElementById('title').value = result.title || '';
+                document.getElementById('description').value = result.description || '';
+                document.getElementById('startDate').value = result.startDate || '';
+                document.getElementById('endDate').value = result.endDate || '';
+                document.getElementById('location').value = result.location || '';
+                document.getElementById('eventUrl').value = result.url || url;
+
+                showSuccess('Event details extracted successfully! Please review and edit as needed.');
+                eventForm.style.display = 'block';
+
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        eventDetailsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessages();
+
+            const formData = new FormData(eventDetailsForm);
+            const eventData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                startDate: formData.get('startDate'),
+                endDate: formData.get('endDate'),
+                location: formData.get('location'),
+                url: formData.get('eventUrl')
+            };
+
+            try {
+                const response = await fetch('/generate-ics', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(eventData)
+                });
+
+                if (!response.ok) {
+                    const result = await response.json();
+                    throw new Error(result.error || 'Failed to generate ICS file');
+                }
+
+                // Download the file
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = 'event.ics';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+
+                showSuccess('ICS file generated and downloaded successfully!');
+
+            } catch (err) {
+                showError(err.message);
+            }
+        });
+    </script>
+</body>
+
+</html>
