@@ -343,9 +343,11 @@
                 if (defaultOption) {
                     select.value = defaultOption.value;
                     if (defaultOption.value === 'custom') {
+                        customInput.disabled = false;
                         customInput.value = config.defaultBaseUrlValue;
                         hiddenInput.value = config.defaultBaseUrlValue;
                     } else {
+                        customInput.disabled = true;
                         customInput.value = defaultOption.value;
                         hiddenInput.value = defaultOption.value;
                     }
