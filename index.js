@@ -3,11 +3,10 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const OpenAI = require('openai');
 const path = require('path');
-const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 // Middleware
 app.use(express.json());
@@ -19,20 +18,30 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Config endpoint to provide default values
+// Config endpoint to provide default values and options
 app.get('/config', (req, res) => {
+    const defaultUrl = process.env.BASE_URL || '';
     res.json({
-        defaultOpenAIToken: process.env.OPENAI_API_KEY || ''
+        defaultBaseUrlValue: defaultUrl,
+        baseUrlOptions: [
+            { value: 'https://api.openai.com/v1', label: 'OpenAI Official API' },
+            { value: 'https://openai-proxy.example.com/v1', label: 'Example Proxy' },
+            {
+                value: 'custom',
+                label: 'Custom URL',
+                isDefault: !['https://api.openai.com/v1', 'https://openai-proxy.example.com/v1'].includes(defaultUrl)
+            }
+        ]
     });
 });
 
 // Extract event details endpoint
 app.post('/extract', async (req, res) => {
     try {
-        const { url, openaiToken } = req.body;
+        const { url, baseUrlValue, apiToken } = req.body;
 
-        if (!url || !openaiToken) {
-            return res.status(400).json({ error: 'URL and OpenAI token are required' });
+        if (!url || !baseUrlValue) {
+            return res.status(400).json({ error: 'URL and base url are required' });
         }
 
         // Fetch webpage content
@@ -54,9 +63,13 @@ app.post('/extract', async (req, res) => {
         const content = textContent.length > maxLength ? textContent.substring(0, maxLength) + '...' : textContent;
 
         // Initialize OpenAI
-        const openai = new OpenAI({
-            apiKey: openaiToken,
-        });
+        const openaiConfig = {
+            baseURL: baseUrlValue
+        };
+        if (req.body.apiToken) {
+            openaiConfig.apiKey = req.body.apiToken;
+        }
+        const openai = new OpenAI(openaiConfig);
 
         // Define the structured output schema
         const eventSchema = {

@@ -200,8 +200,18 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="openaiToken">OpenAI API Token:</label>
-                    <input type="text" id="openaiToken" name="openaiToken" required placeholder="sk-...">
+                    <label for="apiToken">API Token (optional):</label>
+                    <input type="text" id="apiToken" name="apiToken" placeholder="sk-...">
+                </div>
+
+                <div class="form-group">
+                    <label for="baseUrlSelect">Base URL:</label>
+                    <select id="baseUrlSelect" name="baseUrlSelect" required class="form-control">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                    <input type="text" id="baseUrlCustom" name="baseUrlCustom" placeholder="Enter custom URL"
+                        style="margin-top: 10px;" disabled>
+                    <input type="hidden" id="baseUrlValue" name="baseUrlValue">
                 </div>
 
                 <button type="submit">Extract Event Details</button>
@@ -282,16 +292,67 @@
     </div>
 
     <script>
-        // Load default OpenAI token from server
+        // Load base URL options and set up form
         fetch('/config')
             .then(response => response.json())
             .then(config => {
-                if (config.defaultOpenAIToken) {
-                    document.getElementById('openaiToken').value = config.defaultOpenAIToken;
+                const select = document.getElementById('baseUrlSelect');
+                const customInput = document.getElementById('baseUrlCustom');
+                const hiddenInput = document.getElementById('baseUrlValue');
+
+                // Populate dropdown options
+                config.baseUrlOptions.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option.value;
+                    opt.textContent = option.label;
+                    select.appendChild(opt);
+                });
+
+                // Set default value if available
+                if (config.defaultBaseUrlValue) {
+                    const defaultOption = config.baseUrlOptions.find(
+                        opt => opt.value === config.defaultBaseUrlValue
+                    );
+                    if (defaultOption) {
+                        select.value = defaultOption.value;
+                        hiddenInput.value = defaultOption.value;
+                    }
+                }
+
+                // Handle dropdown change
+                select.addEventListener('change', () => {
+                    if (select.value === 'custom') {
+                        customInput.disabled = false;
+                        customInput.value = config.defaultBaseUrlValue;
+                        hiddenInput.value = config.defaultBaseUrlValue;
+                    } else {
+                        customInput.disabled = true;
+                        customInput.value = select.value;
+                        hiddenInput.value = select.value;
+                    }
+                });
+
+                // Handle custom input changes
+                customInput.addEventListener('input', () => {
+                    hiddenInput.value = customInput.value;
+                });
+
+                // Set initial state
+                const defaultOption = config.baseUrlOptions.find(opt => opt.isDefault) ||
+                    config.baseUrlOptions.find(opt => opt.value === 'custom');
+                if (defaultOption) {
+                    select.value = defaultOption.value;
+                    if (defaultOption.value === 'custom') {
+                        customInput.value = config.defaultBaseUrlValue;
+                        hiddenInput.value = config.defaultBaseUrlValue;
+                    } else {
+                        customInput.value = defaultOption.value;
+                        hiddenInput.value = defaultOption.value;
+                    }
                 }
             })
             .catch(error => {
-                console.log('No default token configured');
+                console.log('Error loading config:', error);
             });
 
         const extractView = document.getElementById('extractView');
@@ -331,7 +392,8 @@
 
             const formData = new FormData(extractForm);
             const url = formData.get('url');
-            const openaiToken = formData.get('openaiToken');
+            const apiToken = formData.get('apiToken');
+            const baseUrlValue = formData.get('baseUrlValue');
 
             loading.style.display = 'block';
             extractView.style.display = 'none';
@@ -343,7 +405,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ url, openaiToken })
+                    body: JSON.stringify({ url, baseUrlValue, apiToken })
                 });
 
                 const result = await response.json();
