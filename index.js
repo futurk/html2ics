@@ -25,11 +25,11 @@ app.get('/config', (req, res) => {
         defaultBaseUrlValue: defaultUrl,
         defaultModel: process.env.DEFAULT_MODEL || '',
         baseUrlOptions: [
-            { value: 'https://api.openai.com/v1', label: 'OpenAI Official API' },
-            { value: 'https://openai-proxy.example.com/v1', label: 'Example Proxy' },
+            { value: 'https://api.openai.com/v1', label: 'OpenAI (Official)' },
+            { value: 'https://api.deepseek.com/v1', label: 'DeepSeek (Official)' },
             {
                 value: 'custom',
-                label: 'Custom URL',
+                label: 'Ollama (Local)',
                 isDefault: !['https://api.openai.com/v1', 'https://openai-proxy.example.com/v1'].includes(defaultUrl)
             }
         ]
