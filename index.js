@@ -96,12 +96,8 @@ app.post('/extract', async (req, res) => {
                     type: "string",
                     description: "Event location or venue"
                 },
-                url: {
-                    type: "string",
-                    description: "Event URL or registration link"
-                }
             },
-            required: ["title"],
+            required: ["title", "startDate"],
             additionalProperties: false
         };
 
@@ -118,8 +114,6 @@ app.post('/extract', async (req, res) => {
           - Start date and time (convert to ISO format YYYY-MM-DDTHH:MM)
           - End date and time (if available, convert to ISO format YYYY-MM-DDTHH:MM)
           - Location/venue
-          - Event URL or registration link
-          
           If some information is not available, leave those fields empty or null.
           For dates, try to infer the year if not specified (use current year).
           Convert all times to 24-hour format.`
@@ -139,6 +133,7 @@ app.post('/extract', async (req, res) => {
         });
 
         const eventDetails = JSON.parse(completion.choices[0].message.content);
+        eventDetails.url = url;
 
         res.json(eventDetails);
 
@@ -182,7 +177,7 @@ app.post('/generate-ics', async (req, res) => {
             `SUMMARY:${title.replace(/,/g, '\\,')}`,
             description ? `DESCRIPTION:${description.replace(/,/g, '\\,').replace(/\n/g, '\\n')}` : '',
             location ? `LOCATION:${location.replace(/,/g, '\\,')}` : '',
-            url ? `URL:${url}` : '',
+            `URL:${url}`,
             `DTSTAMP:${formatICSDate(new Date().toISOString())}`,
             'STATUS:CONFIRMED',
             'TRANSP:OPAQUE',
