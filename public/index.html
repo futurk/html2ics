@@ -200,11 +200,6 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="apiToken">API Token (optional):</label>
-                    <input type="text" id="apiToken" name="apiToken" placeholder="sk-...">
-                </div>
-
-                <div class="form-group">
                     <label for="baseUrlSelect">Base URL:</label>
                     <select id="baseUrlSelect" name="baseUrlSelect" required class="form-control">
                         <!-- Options will be populated by JavaScript -->
@@ -212,83 +207,89 @@
                     <input type="text" id="baseUrlCustom" name="baseUrlCustom" placeholder="Enter custom URL"
                         style="margin-top: 10px;" disabled>
                     <input type="hidden" id="baseUrlValue" name="baseUrlValue">
+                    <label for="apiToken">API Token (if necessary):</label>
+                    <input type="text" id="apiToken" name="apiToken" placeholder="sk-...">
+
+                    <label for="model">Model Tag:</label>
+                    <input type="text" id="model" name="model" placeholder="gpt-4o-mini">
                 </div>
+        </div>
 
-                <button type="submit">Extract Event Details</button>
-            </form>
+        <button type="submit">Extract Event Details</button>
+        </form>
 
-            <div class="example-section">
-                <div class="example-title">Example Event Pages:</div>
-                <ul class="example-list">
-                    <li class="example-item"
-                        onclick="document.getElementById('url').value = 'https://galilaea-kirche.de/event/richard-koch-rays-of-light/'">
-                        https://galilaea-kirche.de/event/richard-koch-rays-of-light/
-                        <i class="fas fa-external-link-alt"
-                            onclick="window.open('https://galilaea-kirche.de/event/richard-koch-rays-of-light/', '_blank')"></i>
-                    </li>
-                    <li class="example-item"
-                        onclick="document.getElementById('url').value = 'https://www.meetup.com/web-dev-group/events/123456789'">
-                        https://www.meetup.com/web-dev-group/events/123456789
-                        <i class="fas fa-external-link-alt"
-                            onclick="window.open('https://www.meetup.com/web-dev-group/events/123456789', '_blank')"></i>
-                    </li>
-                    <li class="example-item"
-                        onclick="document.getElementById('url').value = 'https://www.conference.org/summer-summit'">
-                        https://www.conference.org/summer-summit
-                        <i class="fas fa-external-link-alt"
-                            onclick="window.open('https://www.conference.org/summer-summit', '_blank')"></i>
-                    </li>
-                </ul>
+        <div class="example-section">
+            <div class="example-title">Example Event Pages:</div>
+            <ul class="example-list">
+                <li class="example-item"
+                    onclick="document.getElementById('url').value = 'https://galilaea-kirche.de/event/richard-koch-rays-of-light/'">
+                    https://galilaea-kirche.de/event/richard-koch-rays-of-light/
+                    <i class="fas fa-external-link-alt"
+                        onclick="window.open('https://galilaea-kirche.de/event/richard-koch-rays-of-light/', '_blank')"></i>
+                </li>
+                <li class="example-item"
+                    onclick="document.getElementById('url').value = 'https://www.meetup.com/web-dev-group/events/123456789'">
+                    https://www.meetup.com/web-dev-group/events/123456789
+                    <i class="fas fa-external-link-alt"
+                        onclick="window.open('https://www.meetup.com/web-dev-group/events/123456789', '_blank')"></i>
+                </li>
+                <li class="example-item"
+                    onclick="document.getElementById('url').value = 'https://www.conference.org/summer-summit'">
+                    https://www.conference.org/summer-summit
+                    <i class="fas fa-external-link-alt"
+                        onclick="window.open('https://www.conference.org/summer-summit', '_blank')"></i>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Extracting event details...</p>
+    </div>
+
+    <div id="error" class="error"></div>
+    <div id="success" class="success"></div>
+
+    <div id="eventView" class="event-form" style="display: none;">
+        <button onclick="goBack()" style="margin-bottom: 20px;">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <h3>Event Details</h3>
+        <form id="eventDetailsForm">
+            <div class="form-group">
+                <label for="title">Event Title:</label>
+                <input type="text" id="title" name="title" required>
             </div>
-        </div>
 
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p>Extracting event details...</p>
-        </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description"></textarea>
+            </div>
 
-        <div id="error" class="error"></div>
-        <div id="success" class="success"></div>
+            <div class="form-group">
+                <label for="startDate">Start Date & Time:</label>
+                <input type="datetime-local" id="startDate" name="startDate" required>
+            </div>
 
-        <div id="eventView" class="event-form" style="display: none;">
-            <button onclick="goBack()" style="margin-bottom: 20px;">
-                <i class="fas fa-arrow-left"></i> Back
-            </button>
-            <h3>Event Details</h3>
-            <form id="eventDetailsForm">
-                <div class="form-group">
-                    <label for="title">Event Title:</label>
-                    <input type="text" id="title" name="title" required>
-                </div>
+            <div class="form-group">
+                <label for="endDate">End Date & Time:</label>
+                <input type="datetime-local" id="endDate" name="endDate">
+            </div>
 
-                <div class="form-group">
-                    <label for="description">Description:</label>
-                    <textarea id="description" name="description"></textarea>
-                </div>
+            <div class="form-group">
+                <label for="location">Location:</label>
+                <input type="text" id="location" name="location">
+            </div>
 
-                <div class="form-group">
-                    <label for="startDate">Start Date & Time:</label>
-                    <input type="datetime-local" id="startDate" name="startDate" required>
-                </div>
+            <div class="form-group">
+                <label for="eventUrl">Event URL:</label>
+                <input type="url" id="eventUrl" name="eventUrl">
+            </div>
 
-                <div class="form-group">
-                    <label for="endDate">End Date & Time:</label>
-                    <input type="datetime-local" id="endDate" name="endDate">
-                </div>
-
-                <div class="form-group">
-                    <label for="location">Location:</label>
-                    <input type="text" id="location" name="location">
-                </div>
-
-                <div class="form-group">
-                    <label for="eventUrl">Event URL:</label>
-                    <input type="url" id="eventUrl" name="eventUrl">
-                </div>
-
-                <button type="submit" class="download-btn">Generate & Download ICS File</button>
-            </form>
-        </div>
+            <button type="submit" class="download-btn">Generate & Download ICS File</button>
+        </form>
+    </div>
     </div>
 
     <script>
@@ -352,6 +353,8 @@
                         hiddenInput.value = defaultOption.value;
                     }
                 }
+                // Set default model value
+                document.getElementById('model').value = config.defaultModel;
             })
             .catch(error => {
                 console.log('Error loading config:', error);
@@ -396,6 +399,7 @@
             const url = formData.get('url');
             const apiToken = formData.get('apiToken');
             const baseUrlValue = formData.get('baseUrlValue');
+            const model = formData.get('model');
 
             loading.style.display = 'block';
             extractView.style.display = 'none';
@@ -407,7 +411,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ url, baseUrlValue, apiToken })
+                    body: JSON.stringify({ url, baseUrlValue, apiToken, model })
                 });
 
                 const result = await response.json();

@@ -20,9 +20,10 @@ app.get('/', (req, res) => {
 
 // Config endpoint to provide default values and options
 app.get('/config', (req, res) => {
-    const defaultUrl = process.env.BASE_URL || '';
+    const defaultUrl = process.env.DEFAULT_BASE_URL || '';
     res.json({
         defaultBaseUrlValue: defaultUrl,
+        defaultModel: process.env.DEFAULT_MODEL || '',
         baseUrlOptions: [
             { value: 'https://api.openai.com/v1', label: 'OpenAI Official API' },
             { value: 'https://openai-proxy.example.com/v1', label: 'Example Proxy' },
@@ -38,7 +39,7 @@ app.get('/config', (req, res) => {
 // Extract event details endpoint
 app.post('/extract', async (req, res) => {
     try {
-        const { url, baseUrlValue, apiToken } = req.body;
+        const { url, baseUrlValue, apiToken, model } = req.body;
 
         if (!url || !baseUrlValue) {
             return res.status(400).json({ error: 'URL and base url are required' });
@@ -106,7 +107,7 @@ app.post('/extract', async (req, res) => {
 
         // Extract event details using OpenAI
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: model,
             messages: [
                 {
                     role: "system",
