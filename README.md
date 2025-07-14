@@ -35,18 +35,9 @@ event-extractor/
 3. **Create environment file**:
    Create a `.env` file in the root directory:
    ```bash
-   # OpenAI API Configuration
-   OPENAI_API_KEY=your_openai_api_key_here
-   
-   # Server Configuration (optional)
-   PORT=3000
+   DEFAULT_BASE_URL=http://localhost:11434/v1/
+   DEFAULT_MODEL=qwen3:0.6b
    ```
-
-4. **Create the public directory**:
-   ```bash
-   mkdir public
-   ```
-   Then place the `index.html` file in the `public/` directory.
 
 ## Usage
 
@@ -64,7 +55,7 @@ event-extractor/
 
 3. **Extract event details**:
    - Enter the URL of an event webpage
-   - The OpenAI token field will be pre-filled if configured in `.env`
+   - The base url and model tag fields will be pre-filled if configured in `.env`
    - Click "Extract Event Details"
 
 4. **Review and edit** the extracted information in the form
@@ -77,15 +68,6 @@ event-extractor/
 - `GET /config` - Returns configuration (default OpenAI token)
 - `POST /extract` - Extracts event details from a webpage
 - `POST /generate-ics` - Generates and downloads ICS file
-
-## Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `OPENAI_API_KEY` | Your OpenAI API key | Yes* |
-| `PORT` | Server port (default: 3000) | No |
-
-*Can be provided via the web interface if not set in environment
 
 ## Dependencies
 
@@ -101,22 +83,6 @@ event-extractor/
 - No data is persisted on the server
 - All processing happens in memory during the session
 - Remember to add `.env` to your `.gitignore` file
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"Failed to extract event details"**
-   - Check that the URL is accessible and contains event information
-   - Verify your OpenAI API key is valid and has sufficient credits
-
-2. **"No default token configured"**
-   - This is normal if you haven't set `OPENAI_API_KEY` in your `.env` file
-   - You can still enter the token manually in the web interface
-
-3. **Server won't start**
-   - Make sure the `public/` directory exists and contains `index.html`
-   - Check that the port isn't already in use
 
 ### File Structure Check
 
