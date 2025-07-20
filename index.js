@@ -70,6 +70,9 @@ app.post('/extract', async (req, res) => {
         if (req.body.apiToken) {
             openaiConfig.apiKey = req.body.apiToken;
         }
+        else {
+            openaiConfig.apiKey = "ollama";
+        }
         const openai = new OpenAI(openaiConfig);
 
         // Define the structured output schema
