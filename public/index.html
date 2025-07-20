@@ -195,8 +195,12 @@
         <div id="extractView">
             <form id="extractForm">
                 <div class="form-group">
-                    <label for="url">Event Page URL:</label>
-                    <input type="url" id="url" name="url" required placeholder="https://example.com/event">
+                    <label for="url">Event Page URL (or paste text below):</label>
+                    <input type="url" id="url" name="url" placeholder="https://example.com/event">
+                </div>
+                <div class="form-group">
+                    <label for="eventText">Or paste event text directly:</label>
+                    <textarea id="eventText" name="eventText" placeholder="Paste event details here..."></textarea>
                 </div>
 
                 <div class="form-group">
@@ -397,9 +401,14 @@
 
             const formData = new FormData(extractForm);
             const url = formData.get('url');
+            const eventText = formData.get('eventText');
             const apiToken = formData.get('apiToken');
             const baseUrlValue = formData.get('baseUrlValue');
             const model = formData.get('model');
+
+            if (!url && !eventText) {
+                throw new Error('Please provide either a URL or event text');
+            }
 
             loading.style.display = 'block';
             extractView.style.display = 'none';
@@ -411,7 +420,13 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ url, baseUrlValue, apiToken, model })
+                    body: JSON.stringify({
+                        url: url || null,
+                        eventText: eventText || null,
+                        baseUrlValue,
+                        apiToken,
+                        model
+                    })
                 });
 
                 const result = await response.json();

@@ -39,29 +39,38 @@ app.get('/config', (req, res) => {
 // Extract event details endpoint
 app.post('/extract', async (req, res) => {
     try {
-        const { url, baseUrlValue, apiToken, model } = req.body;
+        const { url, eventText, baseUrlValue, apiToken, model } = req.body;
 
-        if (!url || !baseUrlValue) {
-            return res.status(400).json({ error: 'URL and base url are required' });
+        if (!baseUrlValue) {
+            return res.status(400).json({ error: 'Base URL is required' });
+        }
+        if (!url && !eventText) {
+            return res.status(400).json({ error: 'Either URL or event text is required' });
         }
 
-        // Fetch webpage content
-        const response = await axios.get(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            },
-            timeout: 10000
-        });
+        let content;
+        if (eventText) {
+            // Use provided text directly
+            content = eventText;
+        } else {
+            // Fetch webpage content
+            const response = await axios.get(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                },
+                timeout: 10000
+            });
 
-        const $ = cheerio.load(response.data);
+            const $ = cheerio.load(response.data);
 
-        // Extract text content (remove scripts and styles)
-        $('script, style').remove();
-        const textContent = $('body').text().replace(/\s+/g, ' ').trim();
+            // Extract text content (remove scripts and styles)
+            $('script, style').remove();
+            const textContent = $('body').text().replace(/\s+/g, ' ').trim();
 
-        // Limit content length for API
-        const maxLength = 4000;
-        const content = textContent.length > maxLength ? textContent.substring(0, maxLength) + '...' : textContent;
+            // Limit content length for API
+            const maxLength = 4000;
+            content = textContent.length > maxLength ? textContent.substring(0, maxLength) + '...' : textContent;
+        }
 
         // Initialize OpenAI
         const openaiConfig = {
